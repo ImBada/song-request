@@ -87,11 +87,17 @@
         });
         socket.on('songComplete', function(id) {
             var li = document.getElementById('song-' + id);
-            if (li) li.querySelector('span').classList.add('completed');
+            if (li) {
+                li.querySelector('span').classList.add('completed');
+                li.classList.add('completedBackground');
+            }
         });
         socket.on('songUncomplete', function(id) {
             var li = document.getElementById('song-' + id);
-            if (li) li.querySelector('span').classList.remove('completed');
+            if (li) {
+                li.querySelector('span').classList.remove('completed');
+                li.classList.remove('completedBackground');
+            }
         });
         socket.on('songArchive', function(id) {
             var li = document.getElementById('song-' + id);
