@@ -2,48 +2,58 @@
 <html>
 <head>
     <title>Manage Requests</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <h1>Manage Requests</h1>
-    <ul id="song-list">
-        <% songs.forEach(song => { %>
-            <li id="song-<%= song.id %>" class="<%= song.archived ? 'archived' : '' %> <%= song.completed ? 'completed' : '' %>">
-                <%= song.name %> - <%= song.song %> 
-                <% if (!song.archived) { %>
-                    <% if (song.completed) { %>
-                        <form action="/manage/uncomplete/<%= song.id %>" method="POST" style="display:inline;">
-                            <button type="submit">Uncomplete</button>
-                        </form>
-                    <% } else { %>
-                        <form action="/manage/complete/<%= song.id %>" method="POST" style="display:inline;">
-                            <button type="submit">Complete</button>
-                        </form>
-                    <% } %>
-                    <form action="/manage/archive/<%= song.id %>" method="POST" style="display:inline;">
-                        <button type="submit">Archive</button>
-                    </form>
-                <% } else { %>
-                    <form action="/manage/unarchive/<%= song.id %>" method="POST" style="display:inline;">
-                        <button type="submit">Unarchive</button>
-                    </form>
-                <% } %>
-            </li>
-        <% }) %>
-    </ul>
-    <a href="/">Back to list</a>
+    <div class="container">
+        <h1 class="text-center my-4">Manage Requests</h1>
+        <ul id="song-list" class="list-group">
+            <% songs.forEach(song => { %>
+                <li id="song-<%= song.id %>" class="list-group-item d-flex justify-content-between align-items-center <%= song.archived ? 'archived' : '' %> <%= song.completed ? 'completed' : '' %>">
+                    <span><%= song.name %> - <%= song.song %></span>
+                    <div>
+                        <% if (!song.archived) { %>
+                            <% if (song.completed) { %>
+                                <form action="/manage/uncomplete/<%= song.id %>" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-warning btn-sm">Uncomplete</button>
+                                </form>
+                            <% } else { %>
+                                <form action="/manage/complete/<%= song.id %>" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn btn-success btn-sm">Complete</button>
+                                </form>
+                            <% } %>
+                            <form action="/manage/archive/<%= song.id %>" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm">Archive</button>
+                            </form>
+                        <% } else { %>
+                            <form action="/manage/unarchive/<%= song.id %>" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-secondary btn-sm">Unarchive</button>
+                            </form>
+                        <% } %>
+                    </div>
+                </li>
+            <% }) %>
+        </ul>
+        <div class="text-center my-4">
+            <a href="/" class="btn btn-primary">Back to list</a>
+        </div>
+    </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io();
         socket.on('songRequest', function(song) {
             var li = document.createElement('li');
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
             li.innerHTML = song.name + ' - ' + song.song + 
+                '<div>' +
                 '<form action="/manage/complete/' + song.id + '" method="POST" style="display:inline;">' +
-                '<button type="submit">Complete</button>' +
+                '<button type="submit" class="btn btn-success btn-sm">Complete</button>' +
                 '</form>' +
                 '<form action="/manage/archive/' + song.id + '" method="POST" style="display:inline;">' +
-                '<button type="submit">Archive</button>' +
-                '</form>';
+                '<button type="submit" class="btn btn-danger btn-sm">Archive</button>' +
+                '</form>' +
+                '</div>';
             li.id = 'song-' + song.id;
             document.getElementById('song-list').appendChild(li);
         });

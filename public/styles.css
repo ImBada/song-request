@@ -1,26 +1,8 @@
-body {
-    font-family: Arial, sans-serif;
-}
-
-h1 {
-    text-align: center;
-}
-
-ul {
-    list-style: none;
-    padding: 0;
-}
-
-li {
-    padding: 10px;
-    border-bottom: 1px solid #ccc;
-}
-
-li.completed {
+.completed {
     text-decoration: line-through;
 }
 
-li.archived {
+.archived {
     color: red;
 }
 

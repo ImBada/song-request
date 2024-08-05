@@ -2,39 +2,45 @@
 <html>
 <head>
     <title>Song Requests</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <h1>Song Requests</h1>
-    <ul id="song-list">
-        <% songs.forEach(song => { %>
-            <li id="<%= song.id %>" class="<%= song.completed ? 'completed' : '' %>">
-                <%= song.name %> - <%= song.song %>
-            </li>
-        <% }) %>
-    </ul>
-    <a href="/request">Request a song</a>
-    <a href="/manage">Manage View</a>
+    <div class="container">
+        <h1 class="text-center my-4">Song Requests</h1>
+        <ul id="song-list" class="list-group">
+            <% songs.forEach(song => { %>
+                <li id="song-<%= song.id %>" class="list-group-item d-flex justify-content-between align-items-center <%= song.completed ? 'completed' : '' %>">
+                    <%= song.name %> - <%= song.song %>
+                </li>
+            <% }) %>
+        </ul>
+        <div class="text-center my-4">
+            <a href="/request" class="btn btn-primary">Request a song</a>
+            <a href="/manage" class="btn btn-primary">Manage Page</a>
 
+        </div>
+    </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         var socket = io();
         socket.on('songRequest', function(song) {
             var li = document.createElement('li');
-            li.textContent = song.name + ' - ' + song.song;
-            li.id = song.id;
+            li.className = 'list-group-item d-flex justify-content-between align-items-center';
+            li.innerHTML = song.name + ' - ' + song.song;
+            li.id = 'song-' + song.id;
             document.getElementById('song-list').appendChild(li);
         });
         socket.on('songComplete', function(id) {
-            var li = document.getElementById(id);
+            var li = document.getElementById('song-' + id);
             if (li) li.classList.add('completed');
         });
         socket.on('songUncomplete', function(id) {
-            var li = document.getElementById(id);
+            var li = document.getElementById('song-' + id);
             if (li) li.classList.remove('completed');
         });
         socket.on('songArchive', function(id) {
-            var li = document.getElementById(id);
+            var li = document.getElementById('song-' + id);
             if (li) li.remove();
         });
         socket.on('songUnarchive', function(id) {
