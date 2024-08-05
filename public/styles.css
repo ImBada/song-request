@@ -42,7 +42,7 @@ form {
 .fixed-top {
     position: fixed;
     top: 0;
-    width: 10%;
+    width: 42px;
     text-align: center;
 }
 
