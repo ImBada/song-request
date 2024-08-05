@@ -25,8 +25,13 @@ li {
     text-decoration: line-through;
 }
 
+.completedBackground {
+    background-color: lavender;
+}
+
 li.archived {
-    color: red;
+    color: white;
+    background-color:darkred;
 }
 
 form {
@@ -56,5 +61,9 @@ form {
     font-size: 0.9em;
     font-style: italic;
     text-align: right;
-    width: 150px; /* 적절한 너비 설정 */
+}
+
+.header-row {
+    font-weight: bold;
+    background-color: #f8f9fa;
 }

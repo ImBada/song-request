@@ -6,7 +6,6 @@ const session = require('express-session');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
-const { exec } = require('child_process');
 const { Song, sequelize } = require('./models/Song');
 
 const app = express();
@@ -98,12 +97,17 @@ app.get('/manage/backup', (req, res) => {
 });
 
 // 복원 라우트
-app.post('/manage/restore', upload.single('backup'), (req, res) => {
+app.post('/manage/restore', upload.single('backup'), async (req, res) => {
     if (!req.session.isAuthenticated) {
         res.redirect('/manage');
     } else {
+        if (!req.file) {
+            return res.status(400).send('No file uploaded.');
+        }
         const tempPath = req.file.path;
         const targetPath = path.join(__dirname, 'database.sqlite');
+
+        await Song.destroy({ where: {}, truncate: true });
 
         fs.copyFile(tempPath, targetPath, (err) => {
             if (err) {
@@ -111,13 +115,8 @@ app.post('/manage/restore', upload.single('backup'), (req, res) => {
                 res.redirect('/manage/list');
             } else {
                 fs.unlink(tempPath, () => {
-                    exec('pm2 restart all', (execErr, stdout, stderr) => {
-                        if (execErr) {
-                            console.error(execErr);
-                        }
-                        io.emit('reset');
-                        res.redirect('/manage/list');
-                    });
+                    io.emit('reset');
+                    res.redirect('/manage/list');
                 });
             }
         });

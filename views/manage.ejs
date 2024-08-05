@@ -10,27 +10,32 @@
     <div class="container">
         <h1 class="text-center my-4">관리</h1>
         <ul id="song-list" class="list-group">
+            <li class="list-group-item d-flex justify-content-between align-items-center header-row">
+                <span>신청곡</span>
+                <span class="song-requester">신청자</span>
+                <span style="margin-left: 64px;">작업</span>
+            </li>
             <% songs.forEach(song => { %>
-                <li id="song-<%= song.id %>" class="list-group-item d-flex justify-content-between align-items-center <%= song.archived ? 'archived' : '' %>">
+                <li id="song-<%= song.id %>" class="list-group-item d-flex justify-content-between align-items-center <%= song.archived ? 'archived' : '' %> <%= song.completed ? 'completedBackground' : '' %>">
                     <span class="<%= song.completed ? 'completed' : '' %>"><%= song.song %></span>
                     <span class="song-requester"><i><%= song.name %></i></span>
                     <div>
-                        <% if (!song.archived) { %>
-                            <% if (song.completed) { %>
-                                <form action="/manage/uncomplete/<%= song.id %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn btn-warning btn-sm">복원</button>
-                                </form>
-                            <% } else { %>
-                                <form action="/manage/complete/<%= song.id %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn btn-success btn-sm">완료</button>
-                                </form>
-                            <% } %>
+
+                        <% if (song.completed) { %>
+                            <form action="/manage/uncomplete/<%= song.id %>" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-warning btn-sm">취소</button>
+                            </form>
+                        <% } else { %>
+                            <form action="/manage/complete/<%= song.id %>" method="POST" style="display:inline;">
+                                <button type="submit" class="btn btn-success btn-sm">완료</button>
+                            </form>
+                        <% } if (!song.archived) { %>
                             <form action="/manage/archive/<%= song.id %>" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-danger btn-sm">빼기</button>
+                                <button type="submit" class="btn btn-danger btn-sm">제거</button>
                             </form>
                         <% } else { %>
                             <form action="/manage/unarchive/<%= song.id %>" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-secondary btn-sm">넣기</button>
+                                <button type="submit" class="btn btn-secondary btn-sm">복원</button>
                             </form>
                         <% } %>
                     </div>
@@ -38,23 +43,29 @@
             <% }) %>
         </ul>
         <div class="text-center my-4">
-            <a href="/" class="btn btn-primary">메인 페이지로</a>
+            <a href="/" class="btn btn-secondary">목록으로 돌아가기</a>
         </div>
-        <div class="text-center my-4">
-            <form action="/manage/reset" method="POST" style="display:inline;" onsubmit="return confirmReset()">
-                <button type="submit" class="btn btn-danger">Reset Database</button>
-            </form>
-            <a href="/manage/backup" class="btn btn-secondary">Backup Database</a>
-            <form action="/manage/restore" method="POST" enctype="multipart/form-data" style="display:inline;">
-                <input type="file" name="backup" style="display:inline-block;">
-                <button type="submit" class="btn btn-info">Restore Database</button>
-            </form>
+        <div class="text-center my-4" style="background-color: magenta;">
+            <div>
+                <form action="/manage/reset" method="POST" style="display:inline;" onsubmit="return confirmReset()">
+                    <button type="submit" class="btn btn-danger">초기화</button>
+                </form>
+            </div>
+            <div>
+                <a href="/manage/backup" class="btn btn-secondary">백업 파일 다운로드</a>
+            </div>
+            <div>
+                <form action="/manage/restore" method="POST" enctype="multipart/form-data" style="display:inline;">
+                    <input type="file" name="backup" style="display:inline-block;">
+                    <button type="submit" class="btn btn-info">복원</button>
+                </form>
+            </div>
         </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
         function confirmReset() {
-            return confirm('Are you sure you want to reset the database? This action cannot be undone.');
+            return confirm('백업을 따로 안 했으면 복구 불가능합니다. 주의하세요.');
         }
 
         var socket = io();
@@ -65,10 +76,10 @@
                 '<span class="song-requester"><i>' + song.name + '</i></span>' +
                 '<div>' +
                 '<form action="/manage/complete/' + song.id + '" method="POST" style="display:inline;">' +
-                '<button type="submit" class="btn btn-success btn-sm">Complete</button>' +
+                '<button type="submit" class="btn btn-success btn-sm">완료</button>' +
                 '</form>' +
                 '<form action="/manage/archive/' + song.id + '" method="POST" style="display:inline;">' +
-                '<button type="submit" class="btn btn-danger btn-sm">Archive</button>' +
+                '<button type="submit" class="btn btn-danger btn-sm">제거</button>' +
                 '</form>' +
                 '</div>';
             li.id = 'song-' + song.id;
