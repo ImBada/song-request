@@ -3,6 +3,10 @@ const bodyParser = require('body-parser');
 const socketIO = require('socket.io');
 const http = require('http');
 const session = require('express-session');
+const multer = require('multer');
+const fs = require('fs');
+const path = require('path');
+const { exec } = require('child_process');
 const { Song, sequelize } = require('./models/Song');
 
 const app = express();
@@ -10,6 +14,8 @@ const server = http.createServer(app);
 const io = socketIO(server);
 
 const ADMIN_PASSWORD = 'slide';
+
+const upload = multer({ dest: 'uploads/' });
 
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
@@ -67,6 +73,54 @@ app.get('/manage/list', async (req, res) => {
     } else {
         const songs = await Song.findAll();
         res.render('manage', { songs });
+    }
+});
+
+// 초기화 라우트
+app.post('/manage/reset', async (req, res) => {
+    if (!req.session.isAuthenticated) {
+        res.redirect('/manage');
+    } else {
+        await Song.destroy({ where: {}, truncate: true });
+        io.emit('reset');
+        res.redirect('/manage/list');
+    }
+});
+
+// 백업 라우트
+app.get('/manage/backup', (req, res) => {
+    if (!req.session.isAuthenticated) {
+        res.redirect('/manage');
+    } else {
+        const file = path.join(__dirname, 'database.sqlite');
+        res.download(file);
+    }
+});
+
+// 복원 라우트
+app.post('/manage/restore', upload.single('backup'), (req, res) => {
+    if (!req.session.isAuthenticated) {
+        res.redirect('/manage');
+    } else {
+        const tempPath = req.file.path;
+        const targetPath = path.join(__dirname, 'database.sqlite');
+
+        fs.copyFile(tempPath, targetPath, (err) => {
+            if (err) {
+                console.error(err);
+                res.redirect('/manage/list');
+            } else {
+                fs.unlink(tempPath, () => {
+                    exec('pm2 restart all', (execErr, stdout, stderr) => {
+                        if (execErr) {
+                            console.error(execErr);
+                        }
+                        io.emit('reset');
+                        res.redirect('/manage/list');
+                    });
+                });
+            }
+        });
     }
 });
 

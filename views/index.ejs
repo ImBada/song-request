@@ -49,6 +49,9 @@
         socket.on('songUnarchive', function(id) {
             location.reload();  // 페이지를 새로고침하여 아카이브된 곡을 다시 표시
         });
+        socket.on('reset', function() {
+            location.reload();  // 페이지를 새로고침하여 리셋된 데이터 반영
+        });
     </script>
 </body>
 </html>
