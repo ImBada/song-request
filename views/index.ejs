@@ -16,7 +16,7 @@
                 <span class="song-requester">신청자</span>
             </li>
             <% songs.forEach(song => { %>
-                <li id="song-<%= song.id %>" class="list-group-item d-flex justify-content-between align-items-center <%= song.completed ? 'completedBackground' : '' %>">
+                <li id="song-<%= song.id %>" class="list-group-item d-flex justify-content-between align-items-center <%= song.completed ? ' completedBackground' : '' %>">
                     <span class="<%= song.completed ? 'completed' : '' %>"><%= song.song %></span>
                     <span class="song-requester"><i><%= song.name %></i></span>
                 </li>
@@ -40,11 +40,17 @@
         });
         socket.on('songComplete', function(id) {
             var li = document.getElementById('song-' + id);
-            if (li) li.querySelector('span').classList.add('completed');
+            if (li) {
+                li.querySelector('span').classList.add('completed');
+                li.classList.add('completedBackground');
+            }
         });
         socket.on('songUncomplete', function(id) {
             var li = document.getElementById('song-' + id);
-            if (li) li.querySelector('span').classList.remove('completed');
+            if (li) {
+                li.querySelector('span').classList.remove('completed');
+                li.classList.remove('completedBackground');
+            }
         });
         socket.on('songArchive', function(id) {
             var li = document.getElementById('song-' + id);
