@@ -2,15 +2,23 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const socketIO = require('socket.io');
 const http = require('http');
+const session = require('express-session');
 const { Song, sequelize } = require('./models/Song');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIO(server);
 
+const ADMIN_PASSWORD = 'slide';
+
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(session({
+    secret: 'secret-key',
+    resave: false,
+    saveUninitialized: true
+}));
 
 // 데이터베이스 초기화
 sequelize.sync().then(() => console.log('Database synced'));
@@ -33,34 +41,57 @@ app.post('/request', async (req, res) => {
     res.redirect('/');
 });
 
-// 관리 페이지
-app.get('/manage', async (req, res) => {
-    const songs = await Song.findAll();
-    res.render('manage', { songs });
+// 관리 페이지 접근
+app.get('/manage', (req, res) => {
+    if (req.session.isAuthenticated) {
+        res.redirect('/manage/list');
+    } else {
+        res.render('manage_login');
+    }
+});
+
+app.post('/manage', (req, res) => {
+    const { password } = req.body;
+    if (password === ADMIN_PASSWORD) {
+        req.session.isAuthenticated = true;
+        res.redirect('/manage/list');
+    } else {
+        res.render('manage_login', { error: 'Invalid password' });
+    }
+});
+
+// 관리 페이지 (로그인 후)
+app.get('/manage/list', async (req, res) => {
+    if (!req.session.isAuthenticated) {
+        res.redirect('/manage');
+    } else {
+        const songs = await Song.findAll();
+        res.render('manage', { songs });
+    }
 });
 
 app.post('/manage/complete/:id', async (req, res) => {
     await Song.update({ completed: true }, { where: { id: req.params.id } });
     io.emit('songComplete', req.params.id);
-    res.redirect('/manage');
+    res.redirect('/manage/list');
 });
 
 app.post('/manage/uncomplete/:id', async (req, res) => {
     await Song.update({ completed: false }, { where: { id: req.params.id } });
     io.emit('songUncomplete', req.params.id);
-    res.redirect('/manage');
+    res.redirect('/manage/list');
 });
 
 app.post('/manage/archive/:id', async (req, res) => {
     await Song.update({ archived: true }, { where: { id: req.params.id } });
     io.emit('songArchive', req.params.id);
-    res.redirect('/manage');
+    res.redirect('/manage/list');
 });
 
 app.post('/manage/unarchive/:id', async (req, res) => {
     await Song.update({ archived: false }, { where: { id: req.params.id } });
     io.emit('songUnarchive', req.params.id);
-    res.redirect('/manage');
+    res.redirect('/manage/list');
 });
 
 io.on('connection', (socket) => {

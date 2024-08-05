@@ -3,6 +3,7 @@
     "body-parser": "^1.20.2",
     "ejs": "^3.1.10",
     "express": "^4.19.2",
+    "express-session": "^1.18.0",
     "sequelize": "^6.37.3",
     "socket.io": "^4.7.5",
     "sqlite3": "^5.1.7"
