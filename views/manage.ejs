@@ -22,19 +22,19 @@
                     <div>
 
                         <% if (song.completed) { %>
-                            <form action="/manage/uncomplete/<%= song.id %>" method="POST" style="display:inline;">
+                            <form class="btn-uncomplete" action="/manage/uncomplete/<%= song.id %>" method="POST" style="display:inline;">
                                 <button type="submit" class="btn btn-warning btn-sm">취소</button>
                             </form>
                         <% } else { %>
-                            <form action="/manage/complete/<%= song.id %>" method="POST" style="display:inline;">
+                            <form class="btn-complete" action="/manage/complete/<%= song.id %>" method="POST" style="display:inline;">
                                 <button type="submit" class="btn btn-success btn-sm">완료</button>
                             </form>
                         <% } if (!song.archived) { %>
-                            <form action="/manage/archive/<%= song.id %>" method="POST" style="display:inline;">
+                            <form class="btn-archive" action="/manage/archive/<%= song.id %>" method="POST" style="display:inline;">
                                 <button type="submit" class="btn btn-danger btn-sm">제거</button>
                             </form>
                         <% } else { %>
-                            <form action="/manage/unarchive/<%= song.id %>" method="POST" style="display:inline;">
+                            <form class="btn-unarchive" action="/manage/unarchive/<%= song.id %>" method="POST" style="display:inline;">
                                 <button type="submit" class="btn btn-secondary btn-sm">복원</button>
                             </form>
                         <% } %>
@@ -75,10 +75,10 @@
             li.innerHTML = '<span class="' + (song.completed ? 'completed' : '') + '">' + song.song + '</span>' +
                 '<span class="song-requester"><i>' + song.name + '</i></span>' +
                 '<div>' +
-                '<form action="/manage/complete/' + song.id + '" method="POST" style="display:inline;">' +
+                '<form class="btn-complete" action="/manage/complete/' + song.id + '" method="POST" style="display:inline;">' +
                 '<button type="submit" class="btn btn-success btn-sm">완료</button>' +
                 '</form>' +
-                '<form action="/manage/archive/' + song.id + '" method="POST" style="display:inline;">' +
+                '<form class="btn-archive" action="/manage/archive/' + song.id + '" method="POST" style="display:inline;">' +
                 '<button type="submit" class="btn btn-danger btn-sm">제거</button>' +
                 '</form>' +
                 '</div>';
@@ -90,6 +90,18 @@
             if (li) {
                 li.querySelector('span').classList.add('completed');
                 li.classList.add('completedBackground');
+
+                const btForm = li.querySelector('form.btn-complete');
+                if(btForm){
+                    btForm.className = 'btn-uncomplete';
+                    btForm.action = '/manage/uncomplete/' + id;
+                    const button = btForm.querySelector('button');
+                    if(button){
+                        button.textContent = "취소";
+                        button.classList.remove('btn-success');
+                        button.classList.add('btn-warning');
+                    }
+                }
             }
         });
         socket.on('songUncomplete', function(id) {
@@ -97,15 +109,55 @@
             if (li) {
                 li.querySelector('span').classList.remove('completed');
                 li.classList.remove('completedBackground');
+
+                const btForm = li.querySelector('form.btn-uncomplete');
+                if(btForm){
+                    btForm.className = 'btn-complete';
+                    btForm.action = '/manage/complete/' + id;
+                    const button = btForm.querySelector('button');
+                    if(button){
+                        button.textContent = "완료";
+                        button.classList.remove('btn-warning');
+                        button.classList.add('btn-success');
+                    }
+                }
             }
         });
         socket.on('songArchive', function(id) {
             var li = document.getElementById('song-' + id);
-            if (li) li.classList.add('archived');
+            if (li) {
+                li.classList.add('archived');
+
+                const btForm = li.querySelector('form.btn-archive');
+                if(btForm){
+                    btForm.className = 'btn-unarchive';
+                    btForm.action = '/manage/unarchive/' + id;
+                    const button = btForm.querySelector('button');
+                    if(button){
+                        button.textContent = "복원";
+                        button.classList.remove('btn-danger');
+                        button.classList.add('btn-secondary');
+                    }
+                }
+            }
         });
         socket.on('songUnarchive', function(id) {
             var li = document.getElementById('song-' + id);
-            if (li) li.classList.remove('archived');
+            if (li) {
+                li.classList.remove('archived');
+
+                const btForm = li.querySelector('form.btn-unarchive');
+                if(btForm){
+                    btForm.className = 'btn-archive';
+                    btForm.action = '/manage/archive/' + id;
+                    const button = btForm.querySelector('button');
+                    if(button){
+                        button.textContent = "제거";
+                        button.classList.remove('btn-secondary');
+                        button.classList.add('btn-danger');
+                    }
+                }
+            }
         });
         socket.on('reset', function() {
             location.reload();  // 페이지를 새로고침하여 리셋된 데이터 반영
