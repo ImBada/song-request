@@ -7,28 +7,29 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="text-center my-4">Manage Requests</h1>
+        <h1 class="text-center my-4">관리</h1>
         <ul id="song-list" class="list-group">
             <% songs.forEach(song => { %>
                 <li id="song-<%= song.id %>" class="list-group-item d-flex justify-content-between align-items-center <%= song.archived ? 'archived' : '' %> <%= song.completed ? 'completed' : '' %>">
-                    <span><%= song.name %> - <%= song.song %></span>
+                    <span><%= song.song %></span>
+                    <span class="song-requester"><i><%= song.name %></i></span>
                     <div>
                         <% if (!song.archived) { %>
                             <% if (song.completed) { %>
                                 <form action="/manage/uncomplete/<%= song.id %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn btn-warning btn-sm">Uncomplete</button>
+                                    <button type="submit" class="btn btn-warning btn-sm">복원</button>
                                 </form>
                             <% } else { %>
                                 <form action="/manage/complete/<%= song.id %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn btn-success btn-sm">Complete</button>
+                                    <button type="submit" class="btn btn-success btn-sm">완료</button>
                                 </form>
                             <% } %>
                             <form action="/manage/archive/<%= song.id %>" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-danger btn-sm">Archive</button>
+                                <button type="submit" class="btn btn-danger btn-sm">빼기</button>
                             </form>
                         <% } else { %>
                             <form action="/manage/unarchive/<%= song.id %>" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-secondary btn-sm">Unarchive</button>
+                                <button type="submit" class="btn btn-secondary btn-sm">넣기</button>
                             </form>
                         <% } %>
                     </div>
@@ -36,7 +37,7 @@
             <% }) %>
         </ul>
         <div class="text-center my-4">
-            <a href="/" class="btn btn-primary">Back to list</a>
+            <a href="/" class="btn btn-primary">메인 페이지로</a>
         </div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
@@ -45,7 +46,8 @@
         socket.on('songRequest', function(song) {
             var li = document.createElement('li');
             li.className = 'list-group-item d-flex justify-content-between align-items-center';
-            li.innerHTML = song.name + ' - ' + song.song + 
+            li.innerHTML = '<span>' + song.song + '</span>' +
+                '<span class="song-requester"><i>' + song.name + '</i></span>' +
                 '<div>' +
                 '<form action="/manage/complete/' + song.id + '" method="POST" style="display:inline;">' +
                 '<button type="submit" class="btn btn-success btn-sm">Complete</button>' +
