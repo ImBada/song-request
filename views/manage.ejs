@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manage Requests</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <h1>Manage Requests</h1>
+    <ul id="song-list">
+        <% songs.forEach(song => { %>
+            <li id="song-<%= song.id %>" class="<%= song.archived ? 'archived' : '' %> <%= song.completed ? 'completed' : '' %>">
+                <%= song.name %> - <%= song.song %> 
+                <% if (!song.archived) { %>
+                    <% if (song.completed) { %>
+                        <form action="/manage/uncomplete/<%= song.id %>" method="POST" style="display:inline;">
+                            <button type="submit">Uncomplete</button>
+                        </form>
+                    <% } else { %>
+                        <form action="/manage/complete/<%= song.id %>" method="POST" style="display:inline;">
+                            <button type="submit">Complete</button>
+                        </form>
+                    <% } %>
+                    <form action="/manage/archive/<%= song.id %>" method="POST" style="display:inline;">
+                        <button type="submit">Archive</button>
+                    </form>
+                <% } else { %>
+                    <form action="/manage/unarchive/<%= song.id %>" method="POST" style="display:inline;">
+                        <button type="submit">Unarchive</button>
+                    </form>
+                <% } %>
+            </li>
+        <% }) %>
+    </ul>
+    <a href="/">Back to list</a>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        socket.on('songRequest', function(song) {
+            var li = document.createElement('li');
+            li.innerHTML = song.name + ' - ' + song.song + 
+                '<form action="/manage/complete/' + song.id + '" method="POST" style="display:inline;">' +
+                '<button type="submit">Complete</button>' +
+                '</form>' +
+                '<form action="/manage/archive/' + song.id + '" method="POST" style="display:inline;">' +
+                '<button type="submit">Archive</button>' +
+                '</form>';
+            li.id = 'song-' + song.id;
+            document.getElementById('song-list').appendChild(li);
+        });
+        socket.on('songComplete', function(id) {
+            var li = document.getElementById('song-' + id);
+            if (li) li.classList.add('completed');
+        });
+        socket.on('songUncomplete', function(id) {
+            var li = document.getElementById('song-' + id);
+            if (li) li.classList.remove('completed');
+        });
+        socket.on('songArchive', function(id) {
+            var li = document.getElementById('song-' + id);
+            if (li) li.classList.add('archived');
+        });
+        socket.on('songUnarchive', function(id) {
+            var li = document.getElementById('song-' + id);
+            if (li) li.classList.remove('archived');
+        });
+    </script>
+</body>
+</html>

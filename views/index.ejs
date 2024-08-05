@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Song Requests</title>
+    <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+    <h1>Song Requests</h1>
+    <ul id="song-list">
+        <% songs.forEach(song => { %>
+            <li id="<%= song.id %>" class="<%= song.completed ? 'completed' : '' %>">
+                <%= song.name %> - <%= song.song %>
+            </li>
+        <% }) %>
+    </ul>
+    <a href="/request">Request a song</a>
+    <a href="/manage">Manage View</a>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io();
+        socket.on('songRequest', function(song) {
+            var li = document.createElement('li');
+            li.textContent = song.name + ' - ' + song.song;
+            li.id = song.id;
+            document.getElementById('song-list').appendChild(li);
+        });
+        socket.on('songComplete', function(id) {
+            var li = document.getElementById(id);
+            if (li) li.classList.add('completed');
+        });
+        socket.on('songUncomplete', function(id) {
+            var li = document.getElementById(id);
+            if (li) li.classList.remove('completed');
+        });
+        socket.on('songArchive', function(id) {
+            var li = document.getElementById(id);
+            if (li) li.remove();
+        });
+        socket.on('songUnarchive', function(id) {
+            location.reload();  // 페이지를 새로고침하여 아카이브된 곡을 다시 표시
+        });
+    </script>
+</body>
+</html>
