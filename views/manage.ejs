@@ -11,8 +11,8 @@
         <h1 class="text-center my-4">관리</h1>
         <ul id="song-list" class="list-group">
             <% songs.forEach(song => { %>
-                <li id="song-<%= song.id %>" class="list-group-item d-flex justify-content-between align-items-center <%= song.archived ? 'archived' : '' %> <%= song.completed ? 'completed' : '' %>">
-                    <span><%= song.song %></span>
+                <li id="song-<%= song.id %>" class="list-group-item d-flex justify-content-between align-items-center <%= song.archived ? 'archived' : '' %>">
+                    <span class="<%= song.completed ? 'completed' : '' %>"><%= song.song %></span>
                     <span class="song-requester"><i><%= song.name %></i></span>
                     <div>
                         <% if (!song.archived) { %>
@@ -47,7 +47,7 @@
         socket.on('songRequest', function(song) {
             var li = document.createElement('li');
             li.className = 'list-group-item d-flex justify-content-between align-items-center';
-            li.innerHTML = '<span>' + song.song + '</span>' +
+            li.innerHTML = '<span class="' + (song.completed ? 'completed' : '') + '">' + song.song + '</span>' +
                 '<span class="song-requester"><i>' + song.name + '</i></span>' +
                 '<div>' +
                 '<form action="/manage/complete/' + song.id + '" method="POST" style="display:inline;">' +
@@ -62,11 +62,11 @@
         });
         socket.on('songComplete', function(id) {
             var li = document.getElementById('song-' + id);
-            if (li) li.classList.add('completed');
+            if (li) li.querySelector('span').classList.add('completed');
         });
         socket.on('songUncomplete', function(id) {
             var li = document.getElementById('song-' + id);
-            if (li) li.classList.remove('completed');
+            if (li) li.querySelector('span').classList.remove('completed');
         });
         socket.on('songArchive', function(id) {
             var li = document.getElementById('song-' + id);

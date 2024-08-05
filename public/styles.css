@@ -20,8 +20,8 @@ li {
     border-bottom: 1px solid #ccc;
 }
 
-li.completed,
-li.completed:hover {
+.completed,
+.completed:hover {
     text-decoration: line-through;
 }
 
