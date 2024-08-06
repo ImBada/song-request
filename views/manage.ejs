@@ -61,10 +61,22 @@
             const url = `/manage/${action}/${songId}`;
             fetch(url, {
                 method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ socketId: socket.id })
             }).then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // 처리 성공 시 필요한 로직 추가
+                    var completed = undefined;
+                    var archived = undefined;
+                    if (action.indexOf('complete') >= 0){
+                        completed = action == 'complete' ? 'complete' : 'uncomplete';
+                    }
+                    if (action.indexOf('archive') >= 0){
+                        completed = action == 'archive' ? 'archive' : 'unarchive';
+                    }
+                    updateSongElement(songId, completed, archived);
                 } else {
                     console.error('Error: Response not successful');
                 }
