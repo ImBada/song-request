@@ -136,44 +136,48 @@ app.post('/manage/complete/:id', async (req, res) => {
     await Song.update({ completed: true }, { where: { id: req.params.id } });
     const { socketId } = req.body;
     if (socketId) {
-        io.sockets.sockets.get(socketId).broadcast.emit('songComplete', req.params.id);
-    } else {
-        io.emit('songComplete', req.params.id);
+        const socket = io.sockets.sockets.get(socketId);
+        if (socket){
+            socket.broadcast.emit('songComplete', req.params.id);
+            res.status(200).send({ success: true });
+        }
     }
-    res.status(200).send({ success: true });
 });
 
 app.post('/manage/uncomplete/:id', async (req, res) => {
     await Song.update({ completed: false }, { where: { id: req.params.id } });
     const { socketId } = req.body;
     if (socketId) {
-        io.sockets.sockets.get(socketId).broadcast.emit('songUncomplete', req.params.id);
-    } else {
-        io.emit('songUncomplete', req.params.id);
+        const socket = io.sockets.sockets.get(socketId);
+        if (socket){
+            socket.broadcast.emit('songUncomplete', req.params.id);
+            res.status(200).send({ success: true });
+        }
     }
-    res.status(200).send({ success: true });
 });
 
 app.post('/manage/archive/:id', async (req, res) => {
     await Song.update({ archived: true }, { where: { id: req.params.id } });
     const { socketId } = req.body;
     if (socketId) {
-        io.sockets.sockets.get(socketId).broadcast.emit('songArchive', req.params.id);
-    } else {
-        io.emit('songArchive', req.params.id);
+        const socket = io.sockets.sockets.get(socketId);
+        if (socket){
+            socket.broadcast.emit('songArchive', req.params.id);
+            res.status(200).send({ success: true });
+        }
     }
-    res.status(200).send({ success: true });
 });
 
 app.post('/manage/unarchive/:id', async (req, res) => {
     await Song.update({ archived: false }, { where: { id: req.params.id } });
     const { socketId } = req.body;
     if (socketId) {
-        io.sockets.sockets.get(socketId).broadcast.emit('songUnarchive', req.params.id);
-    } else {
-        io.emit('songUnarchive', req.params.id);
+        const socket = io.sockets.sockets.get(socketId);
+        if (socket){
+            socket.broadcast.emit('songUnarchive', req.params.id);
+            res.status(200).send({ success: true });
+        }
     }
-    res.status(200).send({ success: true });
 });
 
 io.on('connection', (socket) => {
