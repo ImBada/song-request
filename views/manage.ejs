@@ -52,114 +52,115 @@
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
-        function confirmReset() {
-            return confirm('백업을 따로 안 했으면 복구 불가능합니다. 주의하세요.');
-        }
-
-        function handleSubmit(event, songId, action) {
-            event.preventDefault();
-            const url = `/manage/${action}/${songId}`;
-            fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ socketId: socket.id })
-            }).then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    var completed = undefined;
-                    var archived = undefined;
-                    if (action.indexOf('complete') >= 0){
-                        completed = action == 'complete' ? 'complete' : 'uncomplete';
-                    }
-                    if (action.indexOf('archive') >= 0){
-                        completed = action == 'archive' ? 'archive' : 'unarchive';
-                    }
-                    updateSongElement(songId, completed, archived);
-                } else {
-                    console.error('Error: Response not successful');
-                }
-            }).catch(error => {
-                console.error('Error:', error);
-            });
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
             var socket = io();
+            socket.on('connect', function() {
+                document.getElementById('song-list').addEventListener('click', function(event) {
+                    if (event.target.classList.contains('btn-action')) {
+                        const songId = event.target.dataset.id;
+                        const action = event.target.dataset.action;
+                        handleSubmit(event, songId, action);
+                    }
+                });
 
-            document.getElementById('song-list').addEventListener('click', function(event) {
-                if (event.target.classList.contains('btn-action')) {
-                    const songId = event.target.dataset.id;
-                    const action = event.target.dataset.action;
-                    handleSubmit(event, songId, action);
+                function confirmReset() {
+                    return confirm('백업을 따로 안 했으면 복구 불가능합니다. 주의하세요.');
                 }
-            });
 
-            function updateSongElement(id, completed, archived) {
-                var li = document.getElementById('song-' + id);
-                if (li) {
-                    const span = li.querySelector('span');
-                    if (completed !== undefined) {
-                        span.classList.toggle('completed', completed);
-                        li.classList.toggle('completedBackground', completed);
-                        const button = li.querySelector('.btn-action[data-action^="complete"], .btn-action[data-action^="uncomplete"]');
-                        if (button) {
-                            button.textContent = completed ? "취소" : "완료";
-                            button.classList.toggle('btn-warning', completed);
-                            button.classList.toggle('btn-success', !completed);
-                            button.dataset.action = completed ? 'uncomplete' : 'complete';
+                function handleSubmit(event, songId, action) {
+                    event.preventDefault();
+                    const url = `/manage/${action}/${songId}`;
+                    fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ socketId: socket.id })
+                    }).then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            var completed = undefined;
+                            var archived = undefined;
+                            if (action.indexOf('complete') >= 0){
+                                completed = action == 'complete' ? true : false;
+                            }
+                            if (action.indexOf('archive') >= 0){
+                                archived = action == 'archive' ? true : false;
+                            }
+                            updateSongElement(songId, completed, archived);
+                        } else {
+                            console.error('Error: Response not successful');
+                        }
+                    }).catch(error => {
+                        console.error('Error:', error);
+                    });
+                }
+
+                function updateSongElement(id, completed, archived) {
+                    var li = document.getElementById('song-' + id);
+                    if (li) {
+                        const span = li.querySelector('span');
+                        if (completed !== undefined) {
+                            span.classList.toggle('completed', completed);
+                            li.classList.toggle('completedBackground', completed);
+                            const button = li.querySelector('.btn-action[data-action^="complete"], .btn-action[data-action^="uncomplete"]');
+                            if (button) {
+                                button.textContent = completed ? "취소" : "완료";
+                                button.classList.toggle('btn-warning', completed);
+                                button.classList.toggle('btn-success', !completed);
+                                button.dataset.action = completed ? 'uncomplete' : 'complete';
+                            }
+                        }
+                        if (archived !== undefined) {
+                            li.classList.toggle('archived', archived);
+                            const button = li.querySelector('.btn-action[data-action^="archive"], .btn-action[data-action^="unarchive"]');
+                            if (button) {
+                                button.textContent = archived ? "복원" : "제거";
+                                button.classList.toggle('btn-secondary', archived);
+                                button.classList.toggle('btn-danger', !archived);
+                                button.dataset.action = archived ? 'unarchive' : 'archive';
+                            }
                         }
                     }
-                    if (archived !== undefined) {
-                        li.classList.toggle('archived', archived);
-                        const button = li.querySelector('.btn-action[data-action^="archive"], .btn-action[data-action^="unarchive"]');
-                        if (button) {
-                            button.textContent = archived ? "복원" : "제거";
-                            button.classList.toggle('btn-secondary', archived);
-                            button.classList.toggle('btn-danger', !archived);
-                            button.dataset.action = archived ? 'unarchive' : 'archive';
-                        }
-                    }
                 }
-            }
 
-            socket.on('songRequest', function(song) {
-                var li = document.createElement('li');
-                li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                li.id = 'song-' + song.id;
-                li.innerHTML = `
-                    <span class="${song.completed ? 'completed' : ''}">${song.song}</span>
-                    <span class="song-requester"><i>${song.name}</i></span>
-                    <div>
-                        <button class="btn-action btn ${song.completed ? 'btn-warning' : 'btn-success'} btn-sm" data-id="${song.id}" data-action="${song.completed ? 'uncomplete' : 'complete'}">
-                            ${song.completed ? '취소' : '완료'}
-                        </button>
-                        <button class="btn-action btn ${song.archived ? 'btn-secondary' : 'btn-danger'} btn-sm" data-id="${song.id}" data-action="${song.archived ? 'unarchive' : 'archive'}">
-                            ${song.archived ? '복원' : '제거'}
-                        </button>
-                    </div>`;
-                document.getElementById('song-list').appendChild(li);
-            });
+                socket.on('songRequest', function(song) {
+                    var li = document.createElement('li');
+                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    li.id = 'song-' + song.id;
+                    li.innerHTML = `
+                        <span class="${song.completed ? 'completed' : ''}">${song.song}</span>
+                        <span class="song-requester"><i>${song.name}</i></span>
+                        <div>
+                            <button class="btn-action btn ${song.completed ? 'btn-warning' : 'btn-success'} btn-sm" data-id="${song.id}" data-action="${song.completed ? 'uncomplete' : 'complete'}">
+                                ${song.completed ? '취소' : '완료'}
+                            </button>
+                            <button class="btn-action btn ${song.archived ? 'btn-secondary' : 'btn-danger'} btn-sm" data-id="${song.id}" data-action="${song.archived ? 'unarchive' : 'archive'}">
+                                ${song.archived ? '복원' : '제거'}
+                            </button>
+                        </div>`;
+                    document.getElementById('song-list').appendChild(li);
+                });
 
-            socket.on('songComplete', function(id) {
-                updateSongElement(id, true);
-            });
+                socket.on('songComplete', function(id) {
+                    updateSongElement(id, true);
+                });
 
-            socket.on('songUncomplete', function(id) {
-                updateSongElement(id, false);
-            });
+                socket.on('songUncomplete', function(id) {
+                    updateSongElement(id, false);
+                });
 
-            socket.on('songArchive', function(id) {
-                updateSongElement(id, undefined, true);
-            });
+                socket.on('songArchive', function(id) {
+                    updateSongElement(id, undefined, true);
+                });
 
-            socket.on('songUnarchive', function(id) {
-                updateSongElement(id, undefined, false);
-            });
+                socket.on('songUnarchive', function(id) {
+                    updateSongElement(id, undefined, false);
+                });
 
-            socket.on('reset', function() {
-                location.reload();  // 페이지를 새로고침하여 리셋된 데이터 반영
+                socket.on('reset', function() {
+                    location.reload();  // 페이지를 새로고침하여 리셋된 데이터 반영
+                });
             });
         });
     </script>

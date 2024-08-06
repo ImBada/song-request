@@ -19,6 +19,7 @@ const upload = multer({ dest: 'uploads/' });
 
 app.use(compression());
 app.set('view engine', 'ejs');
+app.use(bodyParser.json());
 app.use(express.static('public', {
     maxAge: '1d'
 }));
@@ -135,7 +136,7 @@ app.post('/manage/complete/:id', async (req, res) => {
     await Song.update({ completed: true }, { where: { id: req.params.id } });
     const { socketId } = req.body;
     if (socketId) {
-        io.sockets.get(socketId).broadcast.emit('songComplete', req.params.id);
+        io.sockets.sockets.get(socketId).broadcast.emit('songComplete', req.params.id);
     } else {
         io.emit('songComplete', req.params.id);
     }
@@ -146,7 +147,7 @@ app.post('/manage/uncomplete/:id', async (req, res) => {
     await Song.update({ completed: false }, { where: { id: req.params.id } });
     const { socketId } = req.body;
     if (socketId) {
-        io.sockets.get(socketId).broadcast.emit('songUncomplete', req.params.id);
+        io.sockets.sockets.get(socketId).broadcast.emit('songUncomplete', req.params.id);
     } else {
         io.emit('songUncomplete', req.params.id);
     }
@@ -157,7 +158,7 @@ app.post('/manage/archive/:id', async (req, res) => {
     await Song.update({ archived: true }, { where: { id: req.params.id } });
     const { socketId } = req.body;
     if (socketId) {
-        io.sockets.get(socketId).broadcast.emit('songArchive', req.params.id);
+        io.sockets.sockets.get(socketId).broadcast.emit('songArchive', req.params.id);
     } else {
         io.emit('songArchive', req.params.id);
     }
@@ -168,7 +169,7 @@ app.post('/manage/unarchive/:id', async (req, res) => {
     await Song.update({ archived: false }, { where: { id: req.params.id } });
     const { socketId } = req.body;
     if (socketId) {
-        io.sockets.get(socketId).broadcast.emit('songUnarchive', req.params.id);
+        io.sockets.sockets.get(socketId).broadcast.emit('songUnarchive', req.params.id);
     } else {
         io.emit('songUnarchive', req.params.id);
     }
