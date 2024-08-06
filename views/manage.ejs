@@ -20,12 +20,12 @@
                     <span class="<%= song.completed ? 'completed' : '' %>"><%= song.song %></span>
                     <span class="song-requester"><i><%= song.name %></i></span>
                     <div>
-                        <form class="btn-action1" onsubmit="handleSubmit(event, '<%= song.id %>', '<%= song.completed ? 'uncomplete' : 'complete' %>')" style="display:inline;">
-                            <button type="submit" class="btn <%= song.completed ? 'btn-warning' : 'btn-success' %> btn-sm"><%= song.completed ? '취소' : '완료' %></button>
-                        </form>
-                        <form class="btn-action2" onsubmit="handleSubmit(event, '<%= song.id %>', '<%= song.archived ? 'unarchive' : 'archive' %>')" style="display:inline;">
-                            <button type="submit" class="btn <%= song.archived ? 'btn-secondary' : 'btn-danger' %> btn-sm"><%= song.archived ? '복원' : '제거' %></button>
-                        </form>
+                        <button class="btn-action btn <%= song.completed ? 'btn-warning' : 'btn-success' %> btn-sm" data-id="<%= song.id %>" data-action="<%= song.completed ? 'uncomplete' : 'complete' %>">
+                            <%= song.completed ? '취소' : '완료' %>
+                        </button>
+                        <button class="btn-action btn <%= song.archived ? 'btn-secondary' : 'btn-danger' %> btn-sm" data-id="<%= song.id %>" data-action="<%= song.archived ? 'unarchive' : 'archive' %>">
+                            <%= song.archived ? '복원' : '제거' %>
+                        </button>
                     </div>
                 </li>
             <% }) %>
@@ -64,7 +64,7 @@
             }).then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    return;
+                    // 처리 성공 시 필요한 로직 추가
                 } else {
                     console.error('Error: Response not successful');
                 }
@@ -72,103 +72,80 @@
                 console.error('Error:', error);
             });
         }
-        
+
         document.addEventListener('DOMContentLoaded', function() {
             var socket = io();
+
+            document.getElementById('song-list').addEventListener('click', function(event) {
+                if (event.target.classList.contains('btn-action')) {
+                    const songId = event.target.dataset.id;
+                    const action = event.target.dataset.action;
+                    handleSubmit(event, songId, action);
+                }
+            });
+
+            function updateSongElement(id, completed, archived) {
+                var li = document.getElementById('song-' + id);
+                if (li) {
+                    const span = li.querySelector('span');
+                    if (completed !== undefined) {
+                        span.classList.toggle('completed', completed);
+                        li.classList.toggle('completedBackground', completed);
+                        const button = li.querySelector('.btn-action[data-action^="complete"], .btn-action[data-action^="uncomplete"]');
+                        if (button) {
+                            button.textContent = completed ? "취소" : "완료";
+                            button.classList.toggle('btn-warning', completed);
+                            button.classList.toggle('btn-success', !completed);
+                            button.dataset.action = completed ? 'uncomplete' : 'complete';
+                        }
+                    }
+                    if (archived !== undefined) {
+                        li.classList.toggle('archived', archived);
+                        const button = li.querySelector('.btn-action[data-action^="archive"], .btn-action[data-action^="unarchive"]');
+                        if (button) {
+                            button.textContent = archived ? "복원" : "제거";
+                            button.classList.toggle('btn-secondary', archived);
+                            button.classList.toggle('btn-danger', !archived);
+                            button.dataset.action = archived ? 'unarchive' : 'archive';
+                        }
+                    }
+                }
+            }
+
             socket.on('songRequest', function(song) {
-                    var li = document.createElement('li');
-                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
-                    li.innerHTML = '<span class="' + (song.completed ? 'completed' : '') + '">' + song.song + '</span>' +
-                        '<span class="song-requester"><i>' + song.name + '</i></span>' +
-                        '<div>' +
-                        '<form class="btn-action1" onsubmit="handleSubmit(event, \'' + song.id + '\', \'' + (song.completed ? 'uncomplete' : 'complete') + '\')" style="display:inline;">' +
-                        '<button type="submit" class="btn ' + (song.completed ? 'btn-warning' : 'btn-success') + ' btn-sm">' + (song.completed ? '취소' : '완료') + '</button>' +
-                        '</form>' +
-                        '<form class="btn-action2" onsubmit="handleSubmit(event, \'' + song.id + '\', \'' + (song.archived ? 'unarchive' : 'archive') + '\')" style="display:inline;">' +
-                        '<button type="submit" class="btn ' + (song.archived ? 'btn-secondary' : 'btn-danger') + ' btn-sm">' + (song.archived ? '복원' : '제거') + '</button>' +
-                        '</form>' +
-                        '</div>';
-                    li.id = 'song-' + song.id;
-                    document.getElementById('song-list').appendChild(li);
-                });
+                var li = document.createElement('li');
+                li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                li.id = 'song-' + song.id;
+                li.innerHTML = `
+                    <span class="${song.completed ? 'completed' : ''}">${song.song}</span>
+                    <span class="song-requester"><i>${song.name}</i></span>
+                    <div>
+                        <button class="btn-action btn ${song.completed ? 'btn-warning' : 'btn-success'} btn-sm" data-id="${song.id}" data-action="${song.completed ? 'uncomplete' : 'complete'}">
+                            ${song.completed ? '취소' : '완료'}
+                        </button>
+                        <button class="btn-action btn ${song.archived ? 'btn-secondary' : 'btn-danger'} btn-sm" data-id="${song.id}" data-action="${song.archived ? 'unarchive' : 'archive'}">
+                            ${song.archived ? '복원' : '제거'}
+                        </button>
+                    </div>`;
+                document.getElementById('song-list').appendChild(li);
+            });
+
             socket.on('songComplete', function(id) {
-                var li = document.getElementById('song-' + id);
-                if (li) {
-                    li.querySelector('span').classList.add('completed');
-                    li.classList.add('completedBackground');
-
-                    const btForm = li.querySelector('form.btn-action1');
-                    if(btForm){
-                        btForm.onsubmit = function(event) {
-                            handleSubmit(event, id, 'uncomplete');
-                        };
-                        const button = btForm.querySelector('button');
-                        if(button){
-                            button.textContent = "취소";
-                            button.classList.remove('btn-success');
-                            button.classList.add('btn-warning');
-                        }
-                    }
-                }
+                updateSongElement(id, true);
             });
+
             socket.on('songUncomplete', function(id) {
-                var li = document.getElementById('song-' + id);
-                if (li) {
-                    li.querySelector('span').classList.remove('completed');
-                    li.classList.remove('completedBackground');
-
-                    const btForm = li.querySelector('form.btn-action1');
-                    if(btForm){
-                        btForm.onsubmit = function(event) {
-                            handleSubmit(event, id, 'complete');
-                        };
-                        const button = btForm.querySelector('button');
-                        if(button){
-                            button.textContent = "완료";
-                            button.classList.remove('btn-warning');
-                            button.classList.add('btn-success');
-                        }
-                    }
-                }
+                updateSongElement(id, false);
             });
+
             socket.on('songArchive', function(id) {
-                var li = document.getElementById('song-' + id);
-                if (li) {
-                    li.classList.add('archived');
-
-                    const btForm = li.querySelector('form.btn-action2');
-                    if(btForm){
-                        btForm.onsubmit = function(event) {
-                            handleSubmit(event, id, 'unarchive');
-                        };
-                        const button = btForm.querySelector('button');
-                        if(button){
-                            button.textContent = "복원";
-                            button.classList.remove('btn-danger');
-                            button.classList.add('btn-secondary');
-                        }
-                    }
-                }
+                updateSongElement(id, undefined, true);
             });
+
             socket.on('songUnarchive', function(id) {
-                var li = document.getElementById('song-' + id);
-                if (li) {
-                    li.classList.remove('archived');
-
-                    const btForm = li.querySelector('form.btn-action2');
-                    if(btForm){
-                        btForm.onsubmit = function(event) {
-                            handleSubmit(event, id, 'archive');
-                        };
-                        const button = btForm.querySelector('button');
-                        if(button){
-                            button.textContent = "제거";
-                            button.classList.remove('btn-secondary');
-                            button.classList.add('btn-danger');
-                        }
-                    }
-                }
+                updateSongElement(id, undefined, false);
             });
+
             socket.on('reset', function() {
                 location.reload();  // 페이지를 새로고침하여 리셋된 데이터 반영
             });
