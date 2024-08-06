@@ -7,6 +7,7 @@ const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
 const { Song, sequelize } = require('./models/Song');
+const compression = require('compression');
 
 const app = express();
 const server = http.createServer(app);
@@ -16,8 +17,12 @@ const ADMIN_PASSWORD = 'slide';
 
 const upload = multer({ dest: 'uploads/' });
 
+app.use(compression());
 app.set('view engine', 'ejs');
-app.use(express.static('public'));
+app.use(express.static('public', {
+    maxAge: '1d'
+}));
+
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
     secret: 'secret-key',
@@ -30,7 +35,10 @@ sequelize.sync().then(() => console.log('Database synced'));
 
 // 메인 페이지 (공개 리스트)
 app.get('/', async (req, res) => {
-    const songs = await Song.findAll({ where: { archived: false } });
+    const songs = await Song.findAll({ 
+        where: { archived: false },
+        attributes: ['id', 'name', 'song', 'completed']  // 최적화
+    });
     res.render('index', { songs });
 });
 
