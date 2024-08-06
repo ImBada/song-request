@@ -20,24 +20,12 @@
                     <span class="<%= song.completed ? 'completed' : '' %>"><%= song.song %></span>
                     <span class="song-requester"><i><%= song.name %></i></span>
                     <div>
-
-                        <% if (song.completed) { %>
-                            <form class="btn-uncomplete" action="/manage/uncomplete/<%= song.id %>" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-warning btn-sm">취소</button>
-                            </form>
-                        <% } else { %>
-                            <form class="btn-complete" action="/manage/complete/<%= song.id %>" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-success btn-sm">완료</button>
-                            </form>
-                        <% } if (!song.archived) { %>
-                            <form class="btn-archive" action="/manage/archive/<%= song.id %>" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-danger btn-sm">제거</button>
-                            </form>
-                        <% } else { %>
-                            <form class="btn-unarchive" action="/manage/unarchive/<%= song.id %>" method="POST" style="display:inline;">
-                                <button type="submit" class="btn btn-secondary btn-sm">복원</button>
-                            </form>
-                        <% } %>
+                        <form class="btn-action1" onsubmit="handleSubmit(event, '<%= song.id %>', '<%= song.completed ? 'uncomplete' : 'complete' %>')" style="display:inline;">
+                            <button type="submit" class="btn <%= song.completed ? 'btn-warning' : 'btn-success' %> btn-sm"><%= song.completed ? '취소' : '완료' %></button>
+                        </form>
+                        <form class="btn-action2" onsubmit="handleSubmit(event, '<%= song.id %>', '<%= song.archived ? 'unarchive' : 'archive' %>')" style="display:inline;">
+                            <button type="submit" class="btn <%= song.archived ? 'btn-secondary' : 'btn-danger' %> btn-sm"><%= song.archived ? '복원' : '제거' %></button>
+                        </form>
                     </div>
                 </li>
             <% }) %>
@@ -68,99 +56,122 @@
             return confirm('백업을 따로 안 했으면 복구 불가능합니다. 주의하세요.');
         }
 
-        var socket = io();
-        socket.on('songRequest', function(song) {
-            var li = document.createElement('li');
-            li.className = 'list-group-item d-flex justify-content-between align-items-center';
-            li.innerHTML = '<span class="' + (song.completed ? 'completed' : '') + '">' + song.song + '</span>' +
-                '<span class="song-requester"><i>' + song.name + '</i></span>' +
-                '<div>' +
-                '<form class="btn-complete" action="/manage/complete/' + song.id + '" method="POST" style="display:inline;">' +
-                '<button type="submit" class="btn btn-success btn-sm">완료</button>' +
-                '</form>' +
-                '<form class="btn-archive" action="/manage/archive/' + song.id + '" method="POST" style="display:inline;">' +
-                '<button type="submit" class="btn btn-danger btn-sm">제거</button>' +
-                '</form>' +
-                '</div>';
-            li.id = 'song-' + song.id;
-            document.getElementById('song-list').appendChild(li);
-        });
-        socket.on('songComplete', function(id) {
-            var li = document.getElementById('song-' + id);
-            if (li) {
-                li.querySelector('span').classList.add('completed');
-                li.classList.add('completedBackground');
+        function handleSubmit(event, songId, action) {
+            event.preventDefault();
+            const url = `/manage/${action}/${songId}`;
+            fetch(url, {
+                method: 'POST',
+            }).then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    return;
+                } else {
+                    console.error('Error: Response not successful');
+                }
+            }).catch(error => {
+                console.error('Error:', error);
+            });
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            var socket = io();
+            socket.on('songRequest', function(song) {
+                    var li = document.createElement('li');
+                    li.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    li.innerHTML = '<span class="' + (song.completed ? 'completed' : '') + '">' + song.song + '</span>' +
+                        '<span class="song-requester"><i>' + song.name + '</i></span>' +
+                        '<div>' +
+                        '<form class="btn-action1" onsubmit="handleSubmit(event, \'' + song.id + '\', \'' + (song.completed ? 'uncomplete' : 'complete') + '\')" style="display:inline;">' +
+                        '<button type="submit" class="btn ' + (song.completed ? 'btn-warning' : 'btn-success') + ' btn-sm">' + (song.completed ? '취소' : '완료') + '</button>' +
+                        '</form>' +
+                        '<form class="btn-action2" onsubmit="handleSubmit(event, \'' + song.id + '\', \'' + (song.archived ? 'unarchive' : 'archive') + '\')" style="display:inline;">' +
+                        '<button type="submit" class="btn ' + (song.archived ? 'btn-secondary' : 'btn-danger') + ' btn-sm">' + (song.archived ? '복원' : '제거') + '</button>' +
+                        '</form>' +
+                        '</div>';
+                    li.id = 'song-' + song.id;
+                    document.getElementById('song-list').appendChild(li);
+                });
+            socket.on('songComplete', function(id) {
+                var li = document.getElementById('song-' + id);
+                if (li) {
+                    li.querySelector('span').classList.add('completed');
+                    li.classList.add('completedBackground');
 
-                const btForm = li.querySelector('form.btn-complete');
-                if(btForm){
-                    btForm.className = 'btn-uncomplete';
-                    btForm.action = '/manage/uncomplete/' + id;
-                    const button = btForm.querySelector('button');
-                    if(button){
-                        button.textContent = "취소";
-                        button.classList.remove('btn-success');
-                        button.classList.add('btn-warning');
+                    const btForm = li.querySelector('form.btn-action1');
+                    if(btForm){
+                        btForm.onsubmit = function(event) {
+                            handleSubmit(event, id, 'uncomplete');
+                        };
+                        const button = btForm.querySelector('button');
+                        if(button){
+                            button.textContent = "취소";
+                            button.classList.remove('btn-success');
+                            button.classList.add('btn-warning');
+                        }
                     }
                 }
-            }
-        });
-        socket.on('songUncomplete', function(id) {
-            var li = document.getElementById('song-' + id);
-            if (li) {
-                li.querySelector('span').classList.remove('completed');
-                li.classList.remove('completedBackground');
+            });
+            socket.on('songUncomplete', function(id) {
+                var li = document.getElementById('song-' + id);
+                if (li) {
+                    li.querySelector('span').classList.remove('completed');
+                    li.classList.remove('completedBackground');
 
-                const btForm = li.querySelector('form.btn-uncomplete');
-                if(btForm){
-                    btForm.className = 'btn-complete';
-                    btForm.action = '/manage/complete/' + id;
-                    const button = btForm.querySelector('button');
-                    if(button){
-                        button.textContent = "완료";
-                        button.classList.remove('btn-warning');
-                        button.classList.add('btn-success');
+                    const btForm = li.querySelector('form.btn-action1');
+                    if(btForm){
+                        btForm.onsubmit = function(event) {
+                            handleSubmit(event, id, 'complete');
+                        };
+                        const button = btForm.querySelector('button');
+                        if(button){
+                            button.textContent = "완료";
+                            button.classList.remove('btn-warning');
+                            button.classList.add('btn-success');
+                        }
                     }
                 }
-            }
-        });
-        socket.on('songArchive', function(id) {
-            var li = document.getElementById('song-' + id);
-            if (li) {
-                li.classList.add('archived');
+            });
+            socket.on('songArchive', function(id) {
+                var li = document.getElementById('song-' + id);
+                if (li) {
+                    li.classList.add('archived');
 
-                const btForm = li.querySelector('form.btn-archive');
-                if(btForm){
-                    btForm.className = 'btn-unarchive';
-                    btForm.action = '/manage/unarchive/' + id;
-                    const button = btForm.querySelector('button');
-                    if(button){
-                        button.textContent = "복원";
-                        button.classList.remove('btn-danger');
-                        button.classList.add('btn-secondary');
+                    const btForm = li.querySelector('form.btn-action2');
+                    if(btForm){
+                        btForm.onsubmit = function(event) {
+                            handleSubmit(event, id, 'unarchive');
+                        };
+                        const button = btForm.querySelector('button');
+                        if(button){
+                            button.textContent = "복원";
+                            button.classList.remove('btn-danger');
+                            button.classList.add('btn-secondary');
+                        }
                     }
                 }
-            }
-        });
-        socket.on('songUnarchive', function(id) {
-            var li = document.getElementById('song-' + id);
-            if (li) {
-                li.classList.remove('archived');
+            });
+            socket.on('songUnarchive', function(id) {
+                var li = document.getElementById('song-' + id);
+                if (li) {
+                    li.classList.remove('archived');
 
-                const btForm = li.querySelector('form.btn-unarchive');
-                if(btForm){
-                    btForm.className = 'btn-archive';
-                    btForm.action = '/manage/archive/' + id;
-                    const button = btForm.querySelector('button');
-                    if(button){
-                        button.textContent = "제거";
-                        button.classList.remove('btn-secondary');
-                        button.classList.add('btn-danger');
+                    const btForm = li.querySelector('form.btn-action2');
+                    if(btForm){
+                        btForm.onsubmit = function(event) {
+                            handleSubmit(event, id, 'archive');
+                        };
+                        const button = btForm.querySelector('button');
+                        if(button){
+                            button.textContent = "제거";
+                            button.classList.remove('btn-secondary');
+                            button.classList.add('btn-danger');
+                        }
                     }
                 }
-            }
-        });
-        socket.on('reset', function() {
-            location.reload();  // 페이지를 새로고침하여 리셋된 데이터 반영
+            });
+            socket.on('reset', function() {
+                location.reload();  // 페이지를 새로고침하여 리셋된 데이터 반영
+            });
         });
     </script>
 </body>

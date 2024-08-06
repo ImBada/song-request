@@ -126,25 +126,25 @@ app.post('/manage/restore', upload.single('backup'), async (req, res) => {
 app.post('/manage/complete/:id', async (req, res) => {
     await Song.update({ completed: true }, { where: { id: req.params.id } });
     io.emit('songComplete', req.params.id);
-    res.sendStatus(204);
+    res.status(200).send({ success: true });
 });
 
 app.post('/manage/uncomplete/:id', async (req, res) => {
     await Song.update({ completed: false }, { where: { id: req.params.id } });
     io.emit('songUncomplete', req.params.id);
-    res.sendStatus(204);
+    res.status(200).send({ success: true });
 });
 
 app.post('/manage/archive/:id', async (req, res) => {
     await Song.update({ archived: true }, { where: { id: req.params.id } });
     io.emit('songArchive', req.params.id);
-    res.sendStatus(204);
+    res.status(200).send({ success: true });
 });
 
 app.post('/manage/unarchive/:id', async (req, res) => {
     await Song.update({ archived: false }, { where: { id: req.params.id } });
     io.emit('songUnarchive', req.params.id);
-    res.sendStatus(204);
+    res.status(200).send({ success: true });
 });
 
 io.on('connection', (socket) => {
