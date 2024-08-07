@@ -43,7 +43,7 @@
                 <a href="/manage/backup" class="btn btn-secondary">백업 파일 다운로드</a>
             </div>
             <div>
-                <form action="/manage/restore" method="POST" enctype="multipart/form-data" style="display:inline;">
+                <form action="/manage/restore" method="POST" enctype="multipart/form-data" style="display:inline;" onsubmit="return confirmReset()">
                     <input type="file" name="backup" style="display:inline-block;">
                     <button type="submit" class="btn btn-info">복원</button>
                 </form>
@@ -52,6 +52,10 @@
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        function confirmReset() {
+            return confirm('백업을 따로 안 했으면 복구 불가능합니다. 주의하세요.');
+        }
+
         document.addEventListener('DOMContentLoaded', function() {
             var socket = io();
             socket.on('connect', function() {
@@ -62,10 +66,6 @@
                         handleSubmit(event, songId, action);
                     }
                 });
-
-                function confirmReset() {
-                    return confirm('백업을 따로 안 했으면 복구 불가능합니다. 주의하세요.');
-                }
 
                 function handleSubmit(event, songId, action) {
                     event.preventDefault();
