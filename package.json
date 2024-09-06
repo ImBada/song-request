@@ -9,14 +9,5 @@
     "sequelize": "^6.37.3",
     "socket.io": "^4.7.5",
     "sqlite3": "^5.1.7"
-  },
-  "homepage": "https://imbada.github.io/song-request",
-  "devDependencies": {
-    "gh-pages": "^6.1.1"
-  },
-  "scripts": {
-  "build": "npm start",
-  "predeploy": "npm run build",
-  "deploy": "gh-pages -d build"
   }
 }
