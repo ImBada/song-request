@@ -123,8 +123,9 @@
                         }
                     }
                 }
+            });
 
-                socket.on('songRequest', function(song) {
+            socket.on('songRequest', function(song) {
                     var li = document.createElement('li');
                     li.className = 'list-group-item d-flex justify-content-between align-items-center';
                     li.id = 'song-' + song.id;
@@ -161,7 +162,6 @@
                 socket.on('reset', function() {
                     location.reload();  // 페이지를 새로고침하여 리셋된 데이터 반영
                 });
-            });
         });
     </script>
 </body>
